@@ -6,6 +6,7 @@ from app.schemas import WalletCreate, WalletResponse
 
 router = APIRouter()
 
+
 @router.post("/wallets/", response_model=WalletResponse)
 def create_wallet(wallet_data: WalletCreate, db: Session = Depends(get_db)):
     existing_wallet = db.query(Wallet).filter(Wallet.user_id == wallet_data.user_id).first()
@@ -18,6 +19,7 @@ def create_wallet(wallet_data: WalletCreate, db: Session = Depends(get_db)):
     db.refresh(new_wallet)
     return new_wallet
 
+
 @router.get("/wallets/{user_id}", response_model=WalletResponse)
 def get_wallet(user_id: str, db: Session = Depends(get_db)):
     wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
@@ -25,16 +27,18 @@ def get_wallet(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Wallet not found")
     return wallet
 
+
 @router.put("/wallets/{user_id}/credit")
 def credit_wallet(user_id: str, amount: float, db: Session = Depends(get_db)):
     """ Add funds to a user's wallet """
     wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
     if not wallet:
         raise HTTPException(status_code=404, detail="Wallet not found")
-    
+
     wallet.credit(amount)
     db.commit()
     return {"message": "Wallet credited", "new_balance": wallet.balance}
+
 
 @router.put("/wallets/{user_id}/debit")
 def debit_wallet(user_id: str, amount: float, db: Session = Depends(get_db)):
@@ -42,7 +46,7 @@ def debit_wallet(user_id: str, amount: float, db: Session = Depends(get_db)):
     wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
     if not wallet:
         raise HTTPException(status_code=404, detail="Wallet not found")
-    
+
     if wallet.debit(amount):
         db.commit()
         return {"message": "Wallet debited", "new_balance": wallet.balance}
